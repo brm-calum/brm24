@@ -9,10 +9,8 @@ import { SessionProvider } from './contexts/SessionContext';
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <AuthProvider>
-        <SessionProvider>
+      <AuthProvider> 
         <App />
-        </SessionProvider>
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>

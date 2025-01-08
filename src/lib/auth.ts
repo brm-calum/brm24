@@ -63,3 +63,31 @@ export async function resetPassword(email: string) {
     throw error;
   }
 }
+
+export async function signUp(email: string, password: string): Promise<{ error?: Error; needsEmailVerification?: boolean }> {
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+      }
+    });
+
+    if (error) {
+      return { error: new AuthenticationError(error.message) };
+    }
+
+    // Email verification is required
+    if (data.session === null && data.user) {
+      return { needsEmailVerification: true };
+    }
+
+    return {};
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { error: new AuthenticationError('Failed to create account') };
+    }
+    return { error: error instanceof Error ? error : new Error('An unexpected error occurred') };
+  }
+}

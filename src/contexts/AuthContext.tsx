@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { AUTH_ERRORS, AuthError } from '../lib/errors';
-import { signIn as authSignIn, signOut as authSignOut } from '../lib/auth';
+import { signIn as authSignIn, signOut as authSignOut, signUp as authSignUp } from '../lib/auth';
 
 interface AuthContextType {
   user: User | null;
@@ -25,17 +25,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check active sessions and subscribe to auth changes
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchUserRoles(session.user.id);
+    const handleSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          fetchUserRoles(session.user.id);
+        }
+      } catch (err) {
+        // Handle refresh token error by clearing session
+        if (err?.name === 'AuthApiError' && err?.code === 'refresh_token_not_found') {
+          await supabase.auth.signOut();
+          setUser(null);
+          setUserRoles([]);
+          // Clear any remaining auth data
+          localStorage.removeItem('brm-warehouse-auth');
+        }
       }
-    });
+    };
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    handleSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchUserRoles(session.user.id);
@@ -81,36 +92,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     setError(null);
-    const { data: authData, error } = await supabase.auth.signUp({ email, password });
-    
-    if (error) {
-      if (error.message.includes('already registered')) {
-        throw new AuthError(AUTH_ERRORS.EMAIL_IN_USE);
-      }
-      throw new AuthError(error.message);
+    const result = await authSignUp(email, password);
+
+    if (result.error) {
+      throw result.error;
     }
 
-    // Get all non-admin roles
-    const { data: roles } = await supabase
-      .from('roles')
-      .select('id, name')
-      .neq('name', 'administrator');
-
-    if (roles && authData.user) {
-      // Assign all non-admin roles to the new user
-      const userRoles = roles.map(role => ({
-        user_id: authData.user.id,
-        role_id: role.id,
-      }));
-
-      const { error: rolesError } = await supabase
-        .from('user_roles')
-        .insert(userRoles);
-
-      if (rolesError) {
-        console.error('Failed to assign roles:', rolesError);
-      }
-    }
+    return result;
   };
 
   const signOut = async () => {

@@ -11,20 +11,27 @@ export function RegisterForm() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsLoading(true);
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
+      setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
-
     try {
-      await signUp(email, password);
+      const { error, needsEmailVerification } = await signUp(email, password);
+      
+      if (error) throw error;
+      
+      if (needsEmailVerification) {
+        setSuccess('Please check your email for a verification link.');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -41,6 +48,11 @@ export function RegisterForm() {
       </div>
 
       <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        {success && (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative">
+            {success}
+          </div>
+        )}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
             <div className="flex">
