@@ -136,70 +136,51 @@ export function useWarehouses() {
     try {
       setIsLoading(true);
       setError(null);
-      // Build query with all related data
-      let query = supabase
-        .from('warehouses')
-        .select(`
-          *,
-          type:type_id(*),
-          images:warehouse_images(*),
-          features:warehouse_feature_assignments(
-            feature:warehouse_features(*)
-          ),
-          services:warehouse_service_assignments(
-            service:warehouse_services(*),
-            pricing_type,
-            price_per_hour_cents,
-            price_per_unit_cents,
-            unit_type,
-            notes
-          )
-        `);
+      
+      // Add retry logic for network issues
+      const maxRetries = 3;
+      let retryCount = 0;
+      let lastError;
 
-      // If user is logged in, also show their inactive warehouses
-      if (user) {
-        query = query.or(`is_active.eq.true,owner_id.eq.${user.id}`);
-      } else {
-        query = query.eq('is_active', true);
+      while (retryCount < maxRetries) {
+        try {
+          // Build query
+          let query = supabase
+            .from('warehouses')
+            .select(`
+              *,
+              type:type_id(id, name),
+              images:warehouse_images(*)
+            `);
+
+          // If user is logged in, also show their inactive warehouses
+          if (user) {
+            query = query.or(`is_active.eq.true,owner_id.eq.${user.id}`);
+          } else {
+            query = query.eq('is_active', true);
+          }
+
+          // Add ordering
+          query = query.order('created_at', { ascending: false });
+
+          const { data, error: fetchError } = await query;
+
+          if (fetchError) throw fetchError;
+          return data || [];
+        } catch (err) {
+          lastError = err;
+          retryCount++;
+          
+          if (retryCount < maxRetries) {
+            // Wait before retrying (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
+            continue;
+          }
+          throw err;
+        }
       }
 
-      // Add ordering
-      query = query.order('created_at', { ascending: false });
-
-      const { data, error: fetchError } = await query;
-
-      if (fetchError) throw fetchError;
-
-      // Transform the data structure
-      const transformedData = (data || []).map(warehouse => ({
-        ...warehouse,
-        features: warehouse.features?.map(f => {
-          const feature = f.feature;
-          return {
-            id: feature.id,
-            name: feature.name,
-            type: feature.type,
-            icon: feature.icon,
-            custom_value: f.custom_value
-          };
-        }) || [],
-        services: warehouse.services?.map(s => ({
-          id: s.service.id,
-          name: s.service.name,
-          description: s.service.description,
-          icon: s.service.icon,
-          pricing_type: s.pricing_type,
-          hourly_rate_cents: s.price_per_hour_cents,
-          unit_rate_cents: s.price_per_unit_cents,
-          unit_type: s.unit_type,
-          notes: s.notes
-        })) || []
-      }));
-
-      console.log('Raw Warehouse Data:', data);
-      console.log('Fetched Warehouses:', transformedData);
-
-      return transformedData;
+      throw lastError;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load warehouses';
       setError(errorMessage);
