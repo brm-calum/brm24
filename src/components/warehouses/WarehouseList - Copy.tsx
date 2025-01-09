@@ -30,7 +30,6 @@ export function WarehouseList({ filters, onWarehousesLoaded }: WarehouseListProp
   useEffect(() => {
     if (warehouses.length > 0) {
       onWarehousesLoaded?.(warehouses);
-      console.log('Fetched Warehouses:', warehouses);
     }
   }, [warehouses, onWarehousesLoaded]);
 
@@ -41,7 +40,6 @@ export function WarehouseList({ filters, onWarehousesLoaded }: WarehouseListProp
   const loadWarehouses = async () => {
     try {
       const data = await fetchWarehouses();
-      console.log('Raw Warehouse Data:', data);
       setWarehouses(data);
     } catch (err) {
       console.error('Failed to load warehouses:', err);
