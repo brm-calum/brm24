@@ -28,9 +28,22 @@ export function WarehouseForm({ onSubmit, initialData, isLoading }: WarehouseFor
     city: initialData?.city || '',
     country: initialData?.country || '',
     postal_code: initialData?.postal_code || '',
-    features: initialData?.features || [],
-    services: initialData?.services || [],
-    images: initialData?.images || [],
+    features: initialData?.features?.map(f => ({
+      id: f.id,
+      custom_value: f.custom_value
+    })) || [],
+    services: initialData?.services?.map(s => ({
+      id: s.id,
+      pricing_type: s.pricing_type,
+      price_per_hour_cents: s.hourly_rate_cents,
+      price_per_unit_cents: s.unit_rate_cents,
+      unit_type: s.unit_type,
+      notes: s.notes
+    })) || [],
+    images: initialData?.images?.map(img => ({
+      url: img.url,
+      order: img.order
+    })) || [],
   });
 
   useEffect(() => {

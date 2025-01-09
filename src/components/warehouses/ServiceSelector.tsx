@@ -73,15 +73,14 @@ export function ServiceSelector({ selectedServices, onChange }: ServiceSelectorP
   const handlePricingTypeChange = (serviceId: string, pricingType: 'hourly_rate' | 'per_unit' | 'ask_quote') => {
     onChange(selectedServices.map(s => {
       if (s.id === serviceId) {
-        const updatedService = {
+        return {
           ...s,
           pricing_type: pricingType,
-          price_per_hour_cents: undefined,
-          price_per_unit_cents: undefined,
-          unit_type: undefined,
-          notes: pricingType === 'ask_quote' ? 'Ask for quote' : undefined
+          price_per_hour_cents: pricingType === 'hourly_rate' ? s.price_per_hour_cents : undefined,
+          price_per_unit_cents: pricingType === 'per_unit' ? s.price_per_unit_cents : undefined,
+          unit_type: pricingType === 'per_unit' ? s.unit_type : undefined,
+          notes: pricingType === 'ask_quote' ? 'Ask for quote' : s.notes
         };
-        return updatedService;
       }
       return s;
     }));

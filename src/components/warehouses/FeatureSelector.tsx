@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { WarehouseFeature } from '../../lib/types/warehouse';
-import { Truck, Forklift, Crane, Shield, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 interface FeatureSelectorProps {
   selectedFeatures: { id: string; custom_value?: string }[];
@@ -120,7 +120,7 @@ export function FeatureSelector({ selectedFeatures, onChange }: FeatureSelectorP
             className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
           />
           <button
-            onClick={handleCustomFeatureAdd}
+            onClick={handleCustomServiceAdd}
             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
           >
             Add
