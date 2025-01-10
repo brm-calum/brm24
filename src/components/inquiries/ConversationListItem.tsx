@@ -44,7 +44,7 @@ export function ConversationListItem({
         <div className="flex-1 min-w-0">
           <div className="flex justify-between items-start">
             <h3 className="text-sm font-medium text-gray-900 truncate">
-              {conversation.warehouse_name}
+              {conversation.warehouse_name} - {conversation.inquiry_code}
             </h3>
             <div className="flex items-center space-x-1 text-xs text-gray-500">
               <span>{formatRelativeTime(conversation.updated_at)}</span>

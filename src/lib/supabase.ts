@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { Database } from './database.types';
 import { retryWithBackoff } from './utils/retry';
+import { handleError } from './utils/errors';
 
 // Validate environment variables
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -10,6 +11,16 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
+// Handle auth state changes
+const handleAuthStateChange = (event: string, session: any) => {
+  if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+    // Clear any cached data
+    localStorage.removeItem('supabase-auth-token');
+    
+    // Force reload to clear all state
+    window.location.reload();
+  }
+};
 // Create custom fetch with timeout
 const fetchWithTimeout = (url: string, options: RequestInit = {}, timeout = 5000) => {
   return Promise.race([
@@ -26,6 +37,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     storageKey: 'brm-warehouse-auth',
+    detectSessionInUrl: true,
     storage: {
       getItem: key => {
         try {
@@ -57,4 +69,14 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     },
     fetch: (url, options) => retryWithBackoff(() => fetchWithTimeout(url, options))
   },
+});
+
+// Set up auth state change listener
+supabase.auth.onAuthStateChange(handleAuthStateChange);
+
+// Handle auth errors globally
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'TOKEN_REFRESHED' && !session) {
+    handleError(new Error('Session expired'), 'auth');
+  }
 });

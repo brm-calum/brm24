@@ -12,7 +12,6 @@ export function FileLabel({ id, label, onSave, onCancel }: FileLabelProps) {
   const [value, setValue] = useState(label || '');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentError, setCurrentError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

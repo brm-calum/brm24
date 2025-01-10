@@ -5,9 +5,10 @@ import { useState } from 'react';
 
 interface FilesSummaryProps {
   inquiry: any;
+  customerId: string;
 }
 
-export function FilesSummary({ inquiry }: FilesSummaryProps) {
+export function FilesSummary({ inquiry, customerId }: FilesSummaryProps) {
   const [hiddenFiles, setHiddenFiles] = useState<Set<string>>(new Set());
 
   // Collect all files from the inquiry and responses
@@ -22,6 +23,7 @@ export function FilesSummary({ inquiry }: FilesSummaryProps) {
     name: file.file_name,
     size: file.file_size,
     storage_path: file.storage_path,
+    uploader_id: file.uploader_id,
     label: file.label,
     created_at: file.created_at,
   }));
@@ -52,6 +54,7 @@ export function FilesSummary({ inquiry }: FilesSummaryProps) {
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         <SortableFileList
           files={allFiles}
+          customerId={inquiry.inquirer_id}
           onDownload={downloadFile}
           onToggleVisibility={handleToggleVisibility}
           hiddenFiles={hiddenFiles}

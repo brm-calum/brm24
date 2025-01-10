@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Upload, X, Tag, Check } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { FileLabel } from '../../lib/types/file';
 
 interface FileWithLabel extends File {
   label?: string;
@@ -28,7 +30,56 @@ export function FileUploadDialog({
   const [files, setFiles] = useState<FilePreviewData[]>([]);
   const [currentFile, setCurrentFile] = useState<FilePreviewData | null>(null);
   const [label, setLabel] = useState('');
+  const [labelSuggestions, setLabelSuggestions] = useState<FileLabel[]>([]);
+  const [defaultLabels, setDefaultLabels] = useState<FileLabel[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch default labels on mount
+  useEffect(() => {
+    const fetchDefaultLabels = async () => {
+      try {
+        const { data, error } = await supabase.rpc('get_default_labels');
+        if (error) throw error;
+        setDefaultLabels(data || []);
+        setLabelSuggestions(data || []);
+      } catch (err) {
+        console.error('Failed to fetch default labels:', err);
+      }
+    };
+    fetchDefaultLabels();
+  }, []);
+
+  const fetchLabelSuggestions = async (searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      setLabelSuggestions(defaultLabels);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .rpc('get_label_suggestions', {
+          search_term: searchTerm,
+          limit_count: 5
+        });
+
+      if (error) throw error;
+      setLabelSuggestions(data || []);
+    } catch (err) {
+      console.error('Failed to fetch label suggestions:', err);
+      setLabelSuggestions([]);
+    }
+  };
+
+  const handleLabelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLabel(value);
+    fetchLabelSuggestions(value);
+  };
+
+  const handleSuggestionClick = (suggestion: FileLabelSuggestion) => {
+    setLabel(suggestion.name);
+    setLabelSuggestions([]);
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
@@ -63,7 +114,10 @@ export function FileUploadDialog({
 
   const handleLabelSave = () => {
     if (currentFile) {
-      currentFile.file.label = label;
+      currentFile.file.label = label
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
       setFiles(prev => [...prev, currentFile]);
       setCurrentFile(null);
       setLabel('');
@@ -133,10 +187,31 @@ export function FileUploadDialog({
                     type="text"
                     id="label"
                     value={label}
-                    onChange={(e) => setLabel(e.target.value)}
+                    onChange={handleLabelChange}
                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm"
-                    placeholder="Add a label for this file..."
+                    placeholder="Choose or type a label..."
                   />
+                  {(labelSuggestions.length > 0 || defaultLabels.length > 0) && (
+                    <div className="absolute z-10 mt-1 w-full bg-white rounded-md shadow-lg border border-gray-200">
+                      <ul className="py-1">
+                        {labelSuggestions.map((suggestion) => (
+                          <li
+                            key={suggestion.name}
+                            onClick={() => handleSuggestionClick(suggestion)}
+                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between"
+                          >
+                            <span className="flex items-center">
+                              <Tag className="h-4 w-4 mr-2 text-gray-400" />
+                              {suggestion.name}
+                            </span>
+                            {suggestion.is_default && (
+                              <span className="text-xs text-gray-500">Default</span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex justify-end space-x-3">

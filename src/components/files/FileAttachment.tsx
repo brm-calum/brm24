@@ -2,6 +2,7 @@ import React from 'react';
 import { FileIcon, Trash2, Download, Tag, Pencil } from 'lucide-react';
 import { useState } from 'react';
 import { FileLabel } from './FileLabel';
+import { FileLabel as FileLabelType } from '../../lib/types/file';
 
 interface FileAttachmentProps {
   id: string;
@@ -9,7 +10,7 @@ interface FileAttachmentProps {
   size: number;
   type: string;
   label?: string | null;
-  canEditLabel?: boolean;
+  isCustomer: boolean;
   onDelete?: () => void;
   onDownload?: () => void;
   onUpdateLabel?: (id: string, label: string) => Promise<void>;
@@ -21,17 +22,46 @@ export function FileAttachment({
   size,
   type,
   label,
-  canEditLabel,
+  isCustomer,
   onDelete,
   onDownload,
   onUpdateLabel
 }: FileAttachmentProps) {
   const [editingLabel, setEditingLabel] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchLabelSuggestions = async (searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      setLabelSuggestions([]);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .rpc('get_label_suggestions', {
+          search_term: searchTerm,
+          limit_count: 5
+        });
+
+      if (error) throw error;
+      setLabelSuggestions(data || []);
+    } catch (err) {
+      console.error('Failed to fetch label suggestions:', err);
+      setLabelSuggestions([]);
+    }
+  };
 
   const formatSize = (bytes: number) => {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
+  const formatLabel = (label: string) => {
+    return label
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
   };
 
   return (
@@ -46,7 +76,7 @@ export function FileAttachment({
           {label && !editingLabel && (
             <div className="mt-1 text-xs text-gray-500 flex items-center">
               <Tag className="h-3 w-3 mr-1" />
-              {label}
+              {formatLabel(label)}
             </div>
           )}
           {editingLabel && onUpdateLabel ? (
@@ -54,11 +84,21 @@ export function FileAttachment({
               <FileLabel
                 id={id}
                 label={label || ''}
-                onSave={onUpdateLabel}
+                onSave={async (id, label) => {
+                  try {
+                    await onUpdateLabel(id, label);
+                    setEditingLabel(false);
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : 'Failed to update label');
+                  }
+                }}
                 onCancel={() => setEditingLabel(false)}
               />
+              {error && (
+                <p className="mt-1 text-xs text-red-600">{error}</p>
+              )}
             </div>
-          ) : canEditLabel && onUpdateLabel && (
+          ) : isCustomer && onUpdateLabel && (
             <button
               onClick={() => setEditingLabel(true)}
               className="mt-1 text-xs text-gray-400 hover:text-gray-600 flex items-center group"

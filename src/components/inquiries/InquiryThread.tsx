@@ -21,6 +21,7 @@ export function InquiryThread({ inquiry, onRespond }: InquiryThreadProps) {
   const [error, setError] = useState<{ error: Error; debugInfo?: any } | null>(null);
   const [activeTab, setActiveTab] = useState<'messages' | 'files'>('messages'); 
   const [isMarkingRead, setIsMarkingRead] = useState(false);
+  const customerId = inquiry.inquirer_id;
 
   // Mark messages as read when they become visible
   useEffect(() => {
@@ -93,7 +94,8 @@ export function InquiryThread({ inquiry, onRespond }: InquiryThreadProps) {
           <MessageBubble
             message={message}
             isOwn={isOwn}
-            showReadStatus={showReadStatus}
+            inquiry={inquiry}
+            customerId={customerId}
           />
         </div>
       </div>
@@ -101,7 +103,7 @@ export function InquiryThread({ inquiry, onRespond }: InquiryThreadProps) {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-gray-50 mt-16">
+    <div className="flex-1 flex flex-col bg-gray-50 mt-16 h-[calc(100vh-4rem)]">
       {error && (
         <DebugError 
           error={error.error}
@@ -139,7 +141,7 @@ export function InquiryThread({ inquiry, onRespond }: InquiryThreadProps) {
 
       {/* Content */}
       {activeTab === 'messages' ? (
-        <div className="flex-1 overflow-y-auto p-4 md:p-6">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 mb-auto">
           <div className="max-w-screen-xl mx-auto">
           {/* Initial Message */}
           {renderMessage({
@@ -157,19 +159,21 @@ export function InquiryThread({ inquiry, onRespond }: InquiryThreadProps) {
           </div>
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto p-4 md:p-6">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 mb-auto">
           <div className="max-w-screen-xl mx-auto">
-          <FilesSummary inquiry={inquiry} />
+          <FilesSummary inquiry={inquiry} customerId={customerId} />
           </div>
         </div>
       )}
       
       {/* Response Form */}
       {inquiry.thread_status === 'open' && (
-        <InquiryResponse
-          inquiryId={inquiry.inquiry_id}
-          onSubmit={handleSubmit} 
-        />
+        <div className="mt-auto">
+          <InquiryResponse
+            inquiryId={inquiry.inquiry_id}
+            onSubmit={handleSubmit} 
+          />
+        </div>
       )}
     </div>
   );

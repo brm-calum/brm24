@@ -8,6 +8,7 @@ import { FileInfo, FileUrlCache, SortField, SortDirection } from '../../lib/type
 
 interface SortableFileListProps {
   files: FileInfo[];
+  customerId: string;
   onDownload?: (path: string, name: string) => void;
   onUpdateLabel?: (id: string, label: string) => Promise<void>;
   onToggleVisibility?: (id: string) => void;
@@ -16,6 +17,7 @@ interface SortableFileListProps {
 
 export function SortableFileList({ 
   files, 
+  customerId,
   onDownload, 
   onUpdateLabel,
   onToggleVisibility,
@@ -25,6 +27,11 @@ export function SortableFileList({
   const [urlCache, setUrlCache] = useState<FileUrlCache>({});
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [editingLabel, setEditingLabel] = useState<string | null>(null);
+
+  const isCustomer = (fileId: string) => {
+    const file = files.find(f => f.id === fileId);
+    return file?.uploader_id ? customerId === file.uploader_id : false;
+  };
 
   const formatSize = (bytes: number) => {
     if (bytes < 1024) return bytes + ' B';
@@ -154,7 +161,7 @@ export function SortableFileList({
                 ) : (
                   <div 
                     className={`text-sm ${onUpdateLabel ? 'cursor-pointer hover:text-gray-700' : 'text-gray-500'}`}
-                    onClick={() => onUpdateLabel && setEditingLabel(file.id)}
+                    onClick={() => onUpdateLabel && isCustomer(file.id) && setEditingLabel(file.id)}
                   >
                     {file.label || 'Add label...'}
                   </div>

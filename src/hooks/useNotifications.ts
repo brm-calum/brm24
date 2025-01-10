@@ -27,12 +27,13 @@ export function useNotifications() {
       setIsLoading(true);
       setError(null);
 
-      const { count, error: fetchError } = await retryWithBackoff(
-        () => supabase
-          .from('inquiry_responses')
-          .select('*', { count: 'exact', head: true })
-          .eq('recipient_id', user.id)
-          .eq('read', false),
+      const { data, error: fetchError } = await retryWithBackoff(
+        async () => {
+          return await supabase
+            .rpc('get_total_unread_count', {
+              p_user_id: user.id
+            });
+        },
         3,
         1000,
         FETCH_TIMEOUT
@@ -41,7 +42,7 @@ export function useNotifications() {
       if (fetchError) throw fetchError;
       
       if (isMounted.current) {
-        setUnreadCount(count || 0);
+        setUnreadCount(data || 0);
       }
     } catch (err) {
       if (isMounted.current) {
@@ -66,6 +67,20 @@ export function useNotifications() {
 
       channelRef.current = supabase
         .channel(`notifications:${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'warehouse_inquiries',
+            filter: `status=eq.pending`
+          },
+          () => {
+            if (isMounted.current) {
+              fetchUnreadCount();
+            }
+          }
+        )
         .on(
           'postgres_changes',
           {

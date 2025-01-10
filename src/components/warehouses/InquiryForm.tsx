@@ -21,7 +21,8 @@ interface InquiryFormProps {
 export function InquiryForm({ warehouseId, warehouseSize, onSuccess, onCancel }: InquiryFormProps) {
   const { createInquiry, isLoading } = useBookings();
   const [error, setError] = useState<Error | null>(null);
-  const [formData, setFormData] = useState<Omit<InquiryFormData, 'warehouseId'>>({
+  const [formData, setFormData] = useState<InquiryFormData>({
+    warehouseId,
     startDate: new Date(),
     endDate: new Date(),
     spaceNeeded: 0,
@@ -114,11 +115,11 @@ export function InquiryForm({ warehouseId, warehouseSize, onSuccess, onCancel }:
               type="number"
               required
               min="1"
-              max={warehouseSize}
-              value={formData.spaceNeeded}
+              max={warehouseSize.toString()}
+              value={formData.spaceNeeded || ''}
               onChange={(e) => setFormData(prev => ({
                 ...prev,
-                spaceNeeded: parseFloat(e.target.value)
+                spaceNeeded: e.target.value ? parseFloat(e.target.value) : 0
               }))}
               className="block w-full pl-10 border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
             />

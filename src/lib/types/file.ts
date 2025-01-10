@@ -15,5 +15,12 @@ export interface FileInfo {
   type?: string;
   label?: string | null;
   storage_path: string;
+  uploader_id?: string;
   created_at: string;
+}
+
+export interface FileLabel {
+  name: string;
+  is_default: boolean;
+  usage_count: number;
 }
