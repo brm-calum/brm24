@@ -21,7 +21,7 @@ export function FAQPage() {
     },
     {
       question: "What if I have issues with a booking?",
-      answer: "Our support team is available to help resolve any issues. You can contact us through the platform or email support@brm24.ee."
+      answer: "Our support team is available to help resolve any issues. You can contact us through the platform or email support@brm.ee."
     },
     {
       question: "Can I cancel a booking?",

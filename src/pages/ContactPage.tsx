@@ -50,7 +50,7 @@ export function ContactPage() {
               <div className="mt-8 space-y-6">
                 <div className="flex items-center">
                   <Mail className="h-6 w-6 text-green-600" />
-                  <span className="ml-4">support@brm24.ee</span>
+                  <span className="ml-4">support@brm.ee</span>
                 </div>
                 <div className="flex items-center">
                   <MapPin className="h-6 w-6 text-green-600" />
