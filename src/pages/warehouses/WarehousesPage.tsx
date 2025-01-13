@@ -1,16 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useWarehouses } from '../../hooks/useWarehouses';
 import { WarehouseList } from '../../components/warehouses/WarehouseList';
 import { WarehouseMap } from '../../components/warehouses/WarehouseMap';
 import { WarehouseFilters } from '../../components/warehouses/WarehouseFilters';
 import { Plus, List, Map as MapIcon } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { Warehouse } from '../../lib/types/warehouse';
 
 export function WarehousesPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  const { fetchWarehouses, isLoading: warehousesLoading } = useWarehouses();
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [selectedWarehouseId, setSelectedWarehouseId] = useState<string | null>(null);
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [filters, setFilters] = useState({
     search: '',
     minSize: '',
@@ -24,6 +30,31 @@ export function WarehousesPage() {
   });
   const [availableFeatures, setAvailableFeatures] = useState([]);
   const [availableServices, setAvailableServices] = useState([]);
+  const [filteredWarehouses, setFilteredWarehouses] = useState<Warehouse[]>([]);
+
+  // Handle location state from navigation
+  useEffect(() => {
+    const state = location.state;
+    if (state?.viewMode === 'map') {
+      setViewMode('map');
+      if (state.selectedId) {
+        setSelectedWarehouseId(state.selectedId);
+      }
+    }
+  }, [location]);
+
+  // Load warehouses
+  useEffect(() => {
+    const loadWarehouses = async () => {
+      try {
+        const data = await fetchWarehouses();
+        setWarehouses(data);
+      } catch (err) {
+        console.error('Failed to load warehouses:', err);
+      }
+    };
+    loadWarehouses();
+  }, []);
 
   useEffect(() => {
     // Fetch available features and services
@@ -55,9 +86,50 @@ export function WarehousesPage() {
     fetchFilters();
   }, []);
 
+  // Filter warehouses based on criteria
+  useEffect(() => {
+    const filtered = warehouses.filter(warehouse => {
+      const matchesSearch = !filters.search || 
+        [
+          warehouse.name,
+          warehouse.description,
+          warehouse.city,
+          warehouse.country
+        ].some(field => 
+          field?.toLowerCase().includes(filters.search.toLowerCase())
+        );
+
+      const matchesSize = (!filters.minSize || warehouse.size_m2 >= parseFloat(filters.minSize)) &&
+        (!filters.maxSize || warehouse.size_m2 <= parseFloat(filters.maxSize));
+
+      const pricePerM2 = warehouse.price_per_m2_cents / 100;
+      const matchesPrice = (!filters.minPrice || pricePerM2 >= parseFloat(filters.minPrice)) &&
+        (!filters.maxPrice || pricePerM2 <= parseFloat(filters.maxPrice));
+
+      const matchesLocation = (!filters.city || warehouse.city.toLowerCase().includes(filters.city.toLowerCase())) &&
+        (!filters.country || warehouse.country.toLowerCase().includes(filters.country.toLowerCase()));
+
+      const matchesFeatures = filters.features.length === 0 || 
+        filters.features.every(featureId =>
+          warehouse.features?.some(f => f.id === featureId)
+        );
+
+      const matchesServices = filters.services.length === 0 ||
+        filters.services.every(serviceId =>
+          warehouse.services?.some(s => s.id === serviceId)
+        );
+
+      return matchesSearch && matchesSize && matchesPrice && matchesLocation && 
+             matchesFeatures && matchesServices;
+    });
+
+    setFilteredWarehouses(filtered);
+  }, [warehouses, filters]);
+
+
   return (
     <>
-      <div className="py-6">
+      <div className="pt-20 pb-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             <div className="flex-1">
@@ -100,7 +172,7 @@ export function WarehousesPage() {
               )}
             </div>
           </div>
-          <div className={`mt-8 ${viewMode === 'map' ? 'h-[calc(100vh-12rem)]' : ''}`}>
+          <div className={`mt-8 ${viewMode === 'map' ? 'h-[calc(100vh-16rem)]' : ''}`}>
             {viewMode === 'list' ? (
               <>
                 <WarehouseFilters
@@ -109,14 +181,19 @@ export function WarehousesPage() {
                   availableFeatures={availableFeatures}
                   availableServices={availableServices}
                 />
-                <WarehouseList filters={filters} />
+                <WarehouseList 
+                  filters={filters}
+                  onWarehousesLoaded={(loaded) => {
+                    setWarehouses(loaded);
+                  }}
+                />
               </>
             ) : (
               <WarehouseMap
-                warehouses={[]} // Pass warehouses from WarehouseList
+                warehouses={filteredWarehouses}
                 onWarehouseClick={(id) => navigate(`/warehouses/${id}`)}
-              >
-              </WarehouseMap>
+                selectedWarehouseId={selectedWarehouseId}
+              />
             )}
           </div>
         </div>

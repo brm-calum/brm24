@@ -135,6 +135,15 @@ export function WarehouseDetailsPage() {
           </div>
 
           <div className="mt-8 flex justify-end">
+            <div className="flex space-x-4">
+              <button
+                onClick={() => navigate('/warehouses', { state: { viewMode: 'map', selectedId: warehouse.id } })}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                type="button"
+              >
+                <MapPin className="h-4 w-4 mr-2" />
+                Show on Map
+              </button>
             <button
               onClick={() => {
                 if (user) {
@@ -148,6 +157,7 @@ export function WarehouseDetailsPage() {
               <MessageSquare className="h-4 w-4 mr-2" />
               Send Inquiry
             </button>
+            </div>
           </div>
 
           {warehouse.features?.length > 0 && (

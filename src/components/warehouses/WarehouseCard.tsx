@@ -78,7 +78,7 @@ export function WarehouseCard({ warehouse }: WarehouseCardProps) {
         </div>
       </div>
       
-      <div className="flex justify-between items-center mt-4">
+      <div className="flex justify-between items-center mt-4 px-6 pb-6">
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -88,11 +88,27 @@ export function WarehouseCard({ warehouse }: WarehouseCardProps) {
               navigate('/login', { state: { from: `/warehouses/${warehouse.id}` } });
             }
           }}
-          className="inquiry-button inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-green-600 bg-green-50 hover:bg-green-100"
+          className="inquiry-button inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
         >
           <MessageSquare className="h-4 w-4 mr-1" />
           Send Inquiry
         </button>
+        <Link
+          to="/warehouses"
+          state={{ viewMode: 'map', selectedId: warehouse.id }}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            navigate('/warehouses', { 
+              state: { viewMode: 'map', selectedId: warehouse.id },
+              replace: true 
+            });
+          }}
+          className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+        >
+          <MapPin className="h-4 w-4 mr-1" />
+          Show on Map
+        </Link>
       </div>
 
       {showInquiryForm && (
