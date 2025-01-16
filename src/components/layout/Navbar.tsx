@@ -49,7 +49,7 @@ export function Navbar({ className = '' }: { className?: string }) {
               <img 
                 src="/images/BRM_Main_Logo-1.png"
                 alt="BRM Warehouse" 
-                className="h-10 w-auto object-contain"
+                className="h-8 sm:h-10 w-auto min-w-[120px] sm:min-w-[140px] object-contain"
               />
             </Link>
           </div>
