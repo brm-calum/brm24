@@ -123,27 +123,38 @@ export function Navbar({ className = '' }: { className?: string }) {
               </>
             ) : (
               <>
-                <Link
-                  to="/warehouses"
-                  className="inline-flex items-center px-2 py-2 text-sm font-medium text-green-700 hover:text-gray-900 rounded-md shadow-sm transition-colors"
-                >
-                  Find Warehouse
-                </Link>
-                <Link
-                  to="/warehouses/create"
-                  className="inline-flex items-center px-2 py-2 text-sm font-medium text-green-700 hover:text-gray-900 rounded-md shadow-sm transition-colors"
-                >
-                  List Warehouse
-                </Link>
+                <div className="relative hidden sm:block">
+                  <Link
+                    to="/warehouses"
+                    className="inline-flex items-center px-2 py-2 text-sm font-medium text-green-700 hover:text-gray-900 rounded-md shadow-sm transition-colors"
+                  >
+                    Find Warehouse
+                  </Link>
+                  <Link
+                    to="/warehouses/create"
+                    className="inline-flex items-center px-2 py-2 text-sm font-medium text-green-700 hover:text-gray-900 rounded-md shadow-sm transition-colors"
+                  >
+                    List Warehouse
+                  </Link>
+                </div>
+                <div className="block sm:hidden">
+                  <Link
+                    to="/warehouses"
+                    className="inline-flex items-center px-3 py-2 text-sm font-medium text-green-700 hover:text-gray-900 rounded-md shadow-sm transition-colors"
+                  >
+                    <Warehouse className="h-4 w-4 mr-2" />
+                    Warehouses
+                  </Link>
+                </div>
                 <Link
                   to="/contact"
-                  className="inline-flex items-center px-2 py-2 text-sm font-medium  text-gray-900 hover:text-green-700 rounded-md shadow-sm transition-colors"
+                  className="inline-flex items-center px-2 py-2 text-sm font-medium text-gray-900 hover:text-green-700 rounded-md shadow-sm transition-colors"
                 >
                   Contact BRM
                 </Link>
                 <Link
                   to="/login"
-                  className="inline-flex items-center px-2 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md shadow-sm transition-colors"
+                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md shadow-sm transition-colors"
                 >
                   Sign In
                 </Link>
