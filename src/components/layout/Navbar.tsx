@@ -148,7 +148,7 @@ export function Navbar({ className = '' }: { className?: string }) {
                 </div>
                 <Link
                   to="/contact"
-                  className="inline-flex items-center px-2 py-2 text-sm font-medium text-gray-900 hover:text-green-700 rounded-md shadow-sm transition-colors"
+                  className="hidden sm:inline-flex items-center px-2 py-2 text-sm font-medium text-gray-900 hover:text-green-700 rounded-md shadow-sm transition-colors"
                 >
                   Contact BRM
                 </Link>
