@@ -123,7 +123,7 @@ export function WarehouseMap({ warehouses, onWarehouseClick, selectedWarehouseId
           ...prev,
           latitude: location.latitude,
           longitude: location.longitude,
-          zoom: 10
+          zoom: 5
         }));
       }
     } 
