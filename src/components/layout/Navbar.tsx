@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { signOut } from '../../lib/auth';
-import { LogOut, Warehouse, ChevronDown, MessageSquare } from 'lucide-react';
+import { LogOut, Warehouse, ChevronDown, MessageSquare, LogIn } from 'lucide-react';
 import { AdminMenu } from './AdminMenu';
 import { UserMenu } from './UserMenu';
 import { useNotifications } from '../../hooks/useNotifications';
@@ -152,12 +152,22 @@ export function Navbar({ className = '' }: { className?: string }) {
                 >
                   Contact BRM
                 </Link>
+                <div className="relative hidden sm:block">
                 <Link
                   to="/login"
                   className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md shadow-sm transition-colors"
                 >
                   Sign In
                 </Link>
+                </div>
+                <div className="block sm:hidden">
+                <Link
+                  to="/login"
+                  className="text-gray-600 hover:text-gray-900 px-2.5 py-2 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors relative inline-flex items-center"
+                >
+                  <Login className="h-6 w-6" />
+                </Link>
+                </div>
               </>
             )}
           </div>
