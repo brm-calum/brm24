@@ -165,7 +165,7 @@ export function Navbar({ className = '' }: { className?: string }) {
                   to="/login"
                   className="text-gray-600 hover:text-gray-900 px-2.5 py-2 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors relative inline-flex items-center"
                 >
-                  <Login className="h-6 w-6" />
+                  <LogIn className="h-6 w-6" />
                 </Link>
                 </div>
               </>
